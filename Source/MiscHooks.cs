@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using Celeste;
 using Microsoft.Xna.Framework;
+using Monocle;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
@@ -15,8 +16,10 @@ public class MiscHooks
         On.Celeste.DashBlock.OnDashed += DashBlockHook;
         On.Monocle.Entity.Awake += GetArrows;
         On.Celeste.Bumper.OnPlayer += BumperHook;
+        On.Monocle.Entity.Added += JumpThruAddedHook;
         MoveBlockController = new ILHook(typeof(MoveBlock).GetMethod("Controller", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), ControllerHook);
     }
+
     public static void Unload()
     {
 
@@ -24,7 +27,15 @@ public class MiscHooks
         On.Celeste.DashBlock.OnDashed -= DashBlockHook;
         On.Monocle.Entity.Awake -= GetArrows;
         On.Celeste.Bumper.OnPlayer -= BumperHook;
+        On.Monocle.Entity.Added -= JumpThruAddedHook;
         MoveBlockController?.Dispose();
+    }
+
+    private static void JumpThruAddedHook(On.Monocle.Entity.orig_Added orig, Entity self, Scene scene)
+    {
+        if(self is JumpThru jt)
+            scene.Add(new SolidJumpThru(jt));
+        orig(self, scene);
     }
 
     private static void BumperHook(On.Celeste.Bumper.orig_OnPlayer orig, Bumper self, Player player)

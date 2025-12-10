@@ -1,5 +1,6 @@
 
 using Celeste;
+using Celeste.Mod;
 using Microsoft.Xna.Framework;
 using Monocle;
 
@@ -154,6 +155,16 @@ public class TransformCollider : Collider
 
     public override bool Collide(Hitbox box)
     {
+        if(box.Entity is JumpThru) return false;
+        if(box.Entity is SolidJumpThru jt) {
+            var old = Entity.Position;
+            Entity.Position = gravity.origin;
+            Update();
+            var outside = hitbox.AbsoluteBottom <= jt.oldBounds.Top;
+            Entity.Position = old;
+            Update();
+            return hitbox.Collide(box) && outside;
+        }
         Update();
         return hitbox.Collide(box);
     }
